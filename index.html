@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#17181c;--panel:#202228;--line:#34373f;--text:#e9e6df;--dim:#9a9aa3;--gold:#e2b04a;--red:#e24b3b}
+*{box-sizing:border-box}body{margin:0;padding:14px;background:var(--bg);color:var(--text);font:13px/1.45 system-ui,sans-serif}
+h1{font-size:15px;margin:0 0 10px}button{width:100%;margin-bottom:8px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px;cursor:pointer;font:inherit}
+button:hover{border-color:var(--gold)}button.danger:hover{border-color:var(--red);color:var(--red)}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+p{color:var(--dim);margin:10px 0 0;font-size:12px}
+</style></head><body>
+<h1>Статусы Limbus</h1>
+<div id="gm" hidden>
+  <button id="round">Конец раунда</button>
+  <button id="combat" class="danger">Конец боя: снять все эффекты</button>
+</div>
+<p>Выберите токен и нажмите «Статусы» в его меню. «Конец раунда»: Ожог и Обморожение наносят урон и делятся пополам, Разрыв, Тремор и Погружение снимаются.</p>
+<script type="module">
+import { OBR, endRound, endCombat } from "/common.js";
+OBR.onReady(async () => {
+  if ((await OBR.player.getRole()) === "GM") document.getElementById("gm").hidden = false;
+  document.getElementById("round").onclick = endRound;
+  document.getElementById("combat").onclick = () => confirm("Снять статусы со всех токенов?") && endCombat();
+});
+</script></body></html>

@@ -1,0 +1,15 @@
+{
+  "name": "Limbus Status Tracker",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "description": "Статусные эффекты Limbus Company на токенах",
+  "icon": "/icons/burn.png",
+  "action": {
+    "title": "Статусы Limbus",
+    "icon": "/icons/burn.png",
+    "popover": "/index.html",
+    "width": 340,
+    "height": 420
+  },
+  "background_url": "/background.html"
+}

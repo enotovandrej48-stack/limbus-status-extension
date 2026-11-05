@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#17181c;--panel:#202228;--line:#34373f;--text:#e9e6df;--dim:#9a9aa3;--gold:#e2b04a;--red:#e24b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.3 system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
+header{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;flex:1 1 100%;font-weight:700}
+button{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;font:inherit}
+button:hover{border-color:var(--gold)}button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+button.danger:hover{border-color:var(--red);color:var(--red)}
+main{overflow:auto;padding:6px 14px 14px;flex:1}
+h2{font-size:12px;color:var(--dim);font-weight:600;margin:14px 0 6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cell{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 6px}
+.cell img{width:34px;height:34px;opacity:.4;flex:none;cursor:pointer;transition:opacity .15s}
+.cell.on{border-color:#5a4a22}.cell.on img{opacity:1}
+.cell .n{flex:1;min-width:0;font-size:11.5px;overflow-wrap:anywhere}
+.ctl{display:flex;align-items:center;gap:2px;flex:none}
+.ctl button{width:22px;height:24px;padding:0;line-height:1}
+.ctl input{width:34px;height:24px;text-align:center;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:5px;font:inherit;-moz-appearance:textfield}
+.ctl input::-webkit-inner-spin-button{display:none}
+</style></head>
+<body>
+<header><h1 id="title">Статусы</h1>
+<button id="bleed" title="Каждое Действие или Реакция">Действие/Реакция: Кровотечение</button>
+<button id="reset" class="danger">Снять все</button></header>
+<main id="main"></main>
+<script type="module">
+import { OBR, STATUSES, GROUPS, iconUrl, getData, nameOf, setCount, clearToken, bleedTick } from "/common.js";
+const id = new URLSearchParams(location.search).get("id");
+const refs = {};
+OBR.onReady(async () => {
+  const main = document.getElementById("main");
+  GROUPS.forEach((g, gi) => {
+    main.insertAdjacentHTML("beforeend", `<h2>${g}</h2>`);
+    const grid = document.createElement("div"); grid.className = "grid"; main.append(grid);
+    STATUSES.filter((s) => s.group === gi).forEach((s) => {
+      const c = document.createElement("div"); c.className = "cell"; c.title = s.desc || s.ru;
+      c.innerHTML = `<img src="${iconUrl(s.id)}" alt=""><span class="n">${s.ru}</span>
+        <span class="ctl"><button aria-label="Минус">−</button><input type="number" min="0" value="0" aria-label="${s.ru}"><button aria-label="Плюс">+</button></span>`;
+      const [minus, plus] = c.querySelectorAll("button"), inp = c.querySelector("input");
+      const cur = () => Number(inp.value) || 0;
+      minus.onclick = () => setCount(id, s.id, cur() - 1);
+      plus.onclick = c.querySelector("img").onclick = () => setCount(id, s.id, cur() + 1);
+      inp.onchange = () => setCount(id, s.id, inp.value);
+      grid.append(c); refs[s.id] = { c, inp };
+    });
+  });
+  const refresh = async () => {
+    const [it] = await OBR.scene.items.getItems([id]);
+    if (!it) return OBR.popover.close(`com.limbus.status/popover`);
+    document.getElementById("title").textContent = nameOf(it);
+    const d = getData(it);
+    for (const s of STATUSES) {
+      const r = refs[s.id], v = d[s.id] || 0;
+      if (document.activeElement !== r.inp) r.inp.value = v;
+      r.c.classList.toggle("on", v > 0);
+    }
+  };
+  document.getElementById("bleed").onclick = () => bleedTick(id);
+  document.getElementById("reset").onclick = () => clearToken(id);
+  OBR.scene.items.onChange(refresh);
+  refresh();
+});
+</script></body></html>
